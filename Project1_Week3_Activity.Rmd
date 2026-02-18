@@ -172,25 +172,28 @@ summary(model2)
 other.
 
 ```{r a-model3}
-# Fit a model with an interaction term
-# model3 <- lm(response ~ predictor1 * predictor2 + predictor3, data = data)
+# Interaction model: does the effect of hours_coding depend on AI usage?
+# Week 2 showed devs who both code more AND use AI more had highest productivity
+model3 <- lm(productivity ~ hours_coding * ai_usage_hours +
+               sleep_hours + cognitive_load, data = data)
 
-# View summary
-# summary(model3)
+summary(model3)
 ```
 
 **Visualize the interaction:**
 
 ```{r a-interaction-plot}
-# Create interaction plot
-# data %>%
-#   mutate(predictor2_group = cut(predictor2, breaks = 3, 
-#                                  labels = c("Low", "Medium", "High"))) %>%
-#   ggplot(aes(x = predictor1, y = response, color = predictor2_group)) +
-#   geom_point(alpha = 0.5) +
-#   geom_smooth(method = "lm", se = TRUE) +
-#   labs(title = "Interaction Effect") +
-#   theme_minimal()
+data %>%
+  mutate(ai_group = cut(ai_usage_hours, breaks = 3,
+                         labels = c("Low", "Medium", "High"))) %>%
+  ggplot(aes(x = hours_coding, y = productivity, color = ai_group)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Interaction: Hours Coding x AI Usage",
+       x = "Hours Coding",
+       y = "Productivity Score",
+       color = "AI Usage Level") +
+  theme_minimal()
 ```
 
 ------------------------------------------------------------------------
