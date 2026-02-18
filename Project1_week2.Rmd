@@ -1,0 +1,380 @@
+---
+title: "MA214 Applied Statistics - Project 1 Week 2"
+author: "C4 Group 7"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: pdflatex
+header-includes:
+  - \usepackage{geometry}
+  - \geometry{margin=0.75in}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE, tidy.opts = list(width.cutoff = 60))
+library(ggplot2)
+library(dplyr)
+```
+
+## Project 1 week2 worksheet
+
+------------------------------------------------------------------------
+
+### 1: Importing and Inspecting the Data
+
+**Objective:** Load your dataset and understand its structure.
+
+Things to consider:
+
+-   What variables are available? Are there enough predictors for modeling?
+
+-   What are their data types?
+
+-   Are there missing values?
+
+-   Do any variables need cleaning or recoding?
+
+```{r, echo=TRUE}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+
+data <- read.csv("ai_dev_productivity.csv")
+head(data)
+str(data)
+colSums(is.na(data))
+summary(data)
+
+```
+
+Group Discussion: Note any variables that need recoding or cleaning.
+
+- `task_success` is stored as 0/1 numeric but is really categorical, so it needs to be recoded as a factor.
+- `coffee_intake_mg` appears to be capped at 600, which could affect analysis.
+- There are no missing values in the dataset.
+- All other variables are numeric and don't need cleaning.
+
+### 2. Data Transformation
+
+**Objective:** Prepare your data for analysis by performing necessary transformations.
+
+Consider:
+
+-   Do variables need unit changes or standardization?
+
+-   Would a log or other transformation improve visualization or interpretation?
+
+-   Do you need to create new variables for analysis?
+
+```{r, echo=TRUE}
+# Recode task_success as a labeled factor
+data$task_success <- factor(data$task_success, levels=c(0, 1), labels=c("Failure", "Success"))
+
+# Composite productivity score using z-scores of output variables
+# hours_coding excluded here, used as a predictor instead
+data <- data |>
+  mutate(
+    productivity = scale(commits) - scale(bugs_reported) + scale(as.numeric(task_success))
+  )
+data$productivity <- as.numeric(data$productivity)
+
+summary(data$productivity)
+hist(data$productivity, main = "Distribution of Productivity Score", xlab = "Productivity")
+```
+
+Group Discussion: Explain why each transformation was applied.
+
+- We recoded `task_success` from 0/1 to "Failure"/"Success" so it is treated as a category, not a number.
+- We created a composite productivity score by standardizing `commits`, `bugs_reported`, and `task_success` using z-scores. This puts them on the same scale so no single variable dominates. We subtracted `bugs_reported` because more bugs means lower productivity.
+- We excluded `hours_coding` from the productivity score and kept it as a predictor, since more hours spent does not necessarily mean more productive.
+
+### 3. Data Summarization
+
+**Objective:** Summarize your dataset to understand patterns and distributions.
+
+Tasks:
+
+-   Produce overall summaries using table, statistics
+
+-   Produce grouped summaries if applicable (e.g., by category)
+
+-   Produce meaningful summaries by plots
+
+```{r, echo=TRUE}
+summary(data[, c("hours_coding", "coffee_intake_mg", "sleep_hours", "distractions", "ai_usage_hours", "cognitive_load", "productivity")])
+
+# Compare mean predictors by task success
+data |>
+  group_by(task_success) |>
+  summarise(
+    mean_sleep = mean(sleep_hours),
+    mean_coffee = mean(coffee_intake_mg),
+    mean_distractions = mean(distractions),
+    mean_ai_usage = mean(ai_usage_hours),
+    mean_cognitive_load = mean(cognitive_load),
+    mean_productivity = mean(productivity)
+  )
+
+ggplot(data, aes(x=productivity)) +
+  geom_histogram(bins=25, fill="cornflowerblue", color="white") +
+  labs(title="Distribution of Productivity Score",
+       x="Productivity",
+       y="Count")
+```
+
+The productivity score is roughly bell-shaped and centered around 0, which is expected since it is built from z-scores.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=task_success, y=sleep_hours, fill=task_success)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("Failure"="tomato", "Success"="mediumseagreen")) +
+  labs(title="Sleep Hours by Task Success",
+       x="Task Success",
+       y="Sleep Hours")
+```
+
+Successful tasks tend to have higher sleep hours. The median sleep for successes is noticeably higher than for failures.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=task_success, y=cognitive_load, fill=task_success)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("Failure"="tomato", "Success"="mediumseagreen")) +
+  labs(title="Cognitive Load by Task Success",
+       x="Task Success",
+       y="Cognitive Load")
+```
+
+Failed tasks have much higher cognitive load on average. This suggests that mental strain hurts task outcomes.
+
+Group Discussion: Comment on interesting patterns observed in summaries and plots.
+
+- Successful tasks are associated with more sleep and lower cognitive load on average.
+- The productivity score is roughly centered around 0, with a spread from about -3 to 5.
+- The boxplots show a clear difference in cognitive load between success and failure groups, with failures having noticeably higher cognitive load.
+
+### 4. Assumption Checking
+
+**Objective:** Evaluate key modeling assumptions using visualizations and summary statistics.
+
+Check for:
+
+-   Linearity
+
+-   Normality
+
+-   Independence
+
+Tools: Histograms, boxplots, scatterplots
+
+```{r, echo=TRUE}
+# Linearity check
+par(mfrow = c(2, 3))
+plot(data$sleep_hours, data$productivity, main = "Sleep vs Productivity", xlab = "Sleep Hours", ylab = "Productivity")
+plot(data$coffee_intake_mg, data$productivity, main = "Coffee vs Productivity", xlab = "Coffee (mg)", ylab = "Productivity")
+plot(data$distractions, data$productivity, main = "Distractions vs Productivity", xlab = "Distractions", ylab = "Productivity")
+plot(data$ai_usage_hours, data$productivity, main = "AI Usage vs Productivity", xlab = "AI Usage Hours", ylab = "Productivity")
+plot(data$cognitive_load, data$productivity, main = "Cognitive Load vs Productivity", xlab = "Cognitive Load", ylab = "Productivity")
+par(mfrow = c(1, 1))
+```
+
+The scatterplots show roughly linear trends for most predictors. No strong curves are visible, so the linearity assumption looks reasonable.
+
+```{r, echo=TRUE}
+# Normality check
+qqnorm(data$productivity, main="QQ Plot of Productivity Score")
+qqline(data$productivity, col="red")
+```
+
+If the points fall along the red line, the data is approximately normal. Deviations at the tails suggest skewness or outliers.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=productivity)) +
+  geom_histogram(aes(y=after_stat(density)), bins=25, fill="cornflowerblue", color="white") +
+  stat_function(fun=dnorm, args=list(mean=mean(data$productivity), sd=sd(data$productivity)), color="darkred", linewidth=1) +
+  labs(title="Productivity Distribution with Normal Curve",
+       x="Productivity",
+       y="Density")
+```
+
+The histogram follows the red normal curve fairly well. Productivity appears approximately normal, so the normality assumption holds.
+
+Group Discussion: Comment on whether assumptions are met and any potential issues.
+
+- Linearity: The scatterplots show roughly linear relationships between most predictors and productivity. No strong curves are visible.
+- Normality: The histogram of productivity follows the normal curve fairly well, so this assumption looks reasonable.
+- Independence: Each row represents a separate observation, so independence is a safe assumption.
+- One potential issue is that `coffee_intake_mg` is capped at 600, which creates a cluster of points at the top of its range.
+
+### 5. Exploring Relationships Between Variables
+
+Objective: Investigate associations and patterns between variables.
+
+Questions:
+
+Which variables appear associated?
+
+Are relationships linear or nonlinear?
+
+Are there outliers or unusual patterns?
+
+```{r, echo=TRUE}
+# Correlation Summary
+predictors <- data |> select(hours_coding, coffee_intake_mg, sleep_hours, distractions, ai_usage_hours, cognitive_load, productivity)
+round(cor(predictors, use = "complete.obs"), 3)
+
+pred_names <- c("hours_coding", "coffee_intake_mg", "sleep_hours", "distractions", "ai_usage_hours", "cognitive_load")
+r_values <- sapply(pred_names, function(x) cor(data[[x]], data$productivity))
+data.frame(
+  predictor = pred_names,
+  r = round(r_values, 3),
+  R_squared = round(r_values^2, 3)
+)
+```
+
+```{r, echo=TRUE}
+# Predictor vs Productivity Scatterplots
+ggplot(data, aes(x=sleep_hours, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Sleep vs Productivity",
+       x="Sleep Hours",
+       y="Productivity Score")
+```
+
+Positive correlation. More sleep is associated with higher productivity.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=hours_coding, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Hours Coding vs Productivity",
+       x="Hours Coding",
+       y="Productivity Score")
+```
+
+Positive correlation. Developers who code more hours tend to have higher productivity scores.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=cognitive_load, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Cognitive Load vs Productivity",
+       x="Cognitive Load",
+       y="Productivity Score")
+```
+
+Negative correlation. Higher cognitive load is linked to lower productivity.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=distractions, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Distractions vs Productivity",
+       x="Distractions",
+       y="Productivity Score")
+```
+
+Weak negative correlation. More distractions tend to slightly lower productivity, but the relationship is not very strong.
+
+```{r, echo=TRUE}
+# AI Usage Deep Dive
+ggplot(data, aes(x=ai_usage_hours, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="AI Usage vs Productivity",
+       x="AI Usage (Hours)",
+       y="Productivity Score")
+```
+
+Moderate positive correlation. The trend line slopes upward, but the spread of points is wide.
+
+```{r, echo=TRUE}
+data$ai_level <- factor(ifelse(data$ai_usage_hours <= median(data$ai_usage_hours), "Low AI", "High AI"), levels = c("Low AI", "High AI"))
+
+ggplot(data, aes(x=ai_level, y=productivity, fill=ai_level)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("Low AI"="tomato", "High AI"="mediumseagreen")) +
+  labs(title="Productivity: Low vs High AI Usage",
+       x="",
+       y="Productivity Score")
+```
+
+High AI users have a clearly higher median productivity than low AI users. The difference between the two groups is visible.
+
+```{r, echo=TRUE}
+# Mean productivity by AI usage quartile
+data$ai_quartile <- cut(data$ai_usage_hours,
+                        breaks=quantile(data$ai_usage_hours, probs=c(0, 0.25, 0.5, 0.75, 1)),
+                        include.lowest=TRUE,
+                        labels=c("Q1 (Lowest)", "Q2", "Q3", "Q4 (Highest)"))
+
+ai_summary <- data |>
+  group_by(ai_quartile) |>
+  summarise(mean_productivity = mean(productivity))
+
+ggplot(ai_summary, aes(x=ai_quartile, y=mean_productivity, fill=ai_quartile)) +
+  geom_col() +
+  scale_fill_manual(values=c("Q1 (Lowest)"="tomato", "Q2"="sandybrown", "Q3"="darkseagreen", "Q4 (Highest)"="mediumseagreen")) +
+  labs(title="Mean Productivity by AI Usage Quartile",
+       x="AI Usage Quartile",
+       y="Mean Productivity Score")
+```
+
+Mean productivity increases steadily from Q1 to Q4. This shows a clear trend that more AI usage is associated with better output.
+
+```{r, echo=TRUE}
+# AI usage vs productivity, colored by hours coding
+ggplot(data, aes(x=ai_usage_hours, y=productivity, color=hours_coding)) +
+  geom_point(size=2) +
+  scale_color_gradient(low="tomato", high="mediumseagreen", name="Hours Coded") +
+  geom_smooth(method="lm", se=FALSE, color="black", linetype="dashed") +
+  labs(title="AI Usage vs Productivity (Colored by Hours Coded)",
+       x="AI Usage (Hours)",
+       y="Productivity Score")
+```
+
+Green points (more hours coded) tend to cluster in the upper right, showing that developers who both use AI more and code more hours have the highest productivity.
+
+```{r, echo=TRUE}
+# Coffee Intake Relationships
+ggplot(data, aes(x=coffee_intake_mg, y=productivity)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Coffee Intake vs Productivity",
+       x="Coffee Intake (mg)",
+       y="Productivity Score")
+```
+
+Moderate positive correlation. Higher coffee intake is associated with higher productivity, though the cap at 600mg creates a cluster on the right side.
+
+```{r, echo=TRUE}
+ggplot(data, aes(x=coffee_intake_mg, y=hours_coding)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE, color="blue") +
+  labs(title="Coffee Intake vs Hours Coded",
+       x="Coffee Intake (mg)",
+       y="Hours Coding")
+```
+
+Strong positive correlation. Developers who consume more coffee tend to code for more hours.
+
+Group Discussion: Summarize the key relationships and any patterns found.
+
+- Sleep hours and hours coding have the strongest positive correlations with productivity.
+- Cognitive load has a negative relationship with productivity, meaning higher mental strain is linked to worse output.
+- AI usage shows a clear positive effect on productivity, especially visible in the quartile bar chart where mean productivity increases steadily from Q1 to Q4.
+- Coffee intake is positively correlated with hours coding, suggesting developers who drink more coffee tend to code longer.
+
+------------------------------------------------------------------------
+
+Submit this document at the end of today’s lab. If you downloaded any CSV files, please include them with your submission. **Each group should submit one set of files (Rmd, PDF, and any CSV files) to Blackboard.**
+
+**To convert this R Markdown document to PDF:** In RStudio, click the **Knit** button at the top of the editor and select **Knit to PDF**. Make sure you have LaTeX installed (e.g., TinyTeX) to enable PDF generation.
+
+| Name | BUID | Present/Absent |
+|------|------|----------------|
+| Yunhao Zhou | U18926707 | Present |
+| Hibak Hussen | U15515562 | Present |
+| Muze Ren | U21890514 | Present |
+| Ian Sabia | U33871576 | Present |
