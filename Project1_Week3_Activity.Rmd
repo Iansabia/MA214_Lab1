@@ -1,7 +1,7 @@
 ---
 title: "MA214 Applied Statistics - Project 1 Week 3 Activity"
 subtitle: "Modeling, Model Selection, and Diagnostics"
-author: "Section ___  |  Group ___"
+author: "Section C4  |  Group 7"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
@@ -52,29 +52,47 @@ solutions
 ## Part 0: Load Your Data
 
 ```{r load-data}
-# Load your dataset here
-# Example: data <- read.csv("your_dataset.csv")
+# Load dataset
+data <- read.csv("ai_dev_productivity.csv")
 
-# Display the first few rows
-# head(data)
+# Recode task_success as factor (same as Week 2)
+data$task_success <- factor(data$task_success, levels = c(0, 1), labels = c("Failure", "Success"))
+
+# Recreate composite productivity score from Week 2
+data <- data |>
+  mutate(
+    productivity = scale(commits) - scale(bugs_reported) + scale(as.numeric(task_success))
+  )
+data$productivity <- as.numeric(data$productivity)
+
+# Display first few rows
+head(data)
 
 # Check structure
-# str(data)
+str(data)
 ```
 
 **Group Discussion:**
 
 \- What is your response variable?
 
+- Our response variable is `productivity`, a composite score built from z-scores of commits, bugs_reported, and task_success (from Week 2).
+
 \- Is it continuous (use Section A) or binary (use Section B)?
+
+- It is continuous (numeric), so we use Section A (Linear Regression).
 
 \- What predictors are you considering?
 
+- `hours_coding`, `sleep_hours`, `cognitive_load`, `ai_usage_hours`, `coffee_intake_mg`, and `distractions`. These were identified in Week 2's EDA as having meaningful correlations with productivity.
+
 \- Are all variables in the correct format (numeric, factor, etc.)?
+
+- Yes. All predictors are numeric, which is correct for linear regression. `task_success` was recoded to a factor but is only used inside the productivity score, not as a standalone predictor.
 
 **☐ Check here which section you'll use:**
 
--   [ ] Section A: Linear Regression
+-   [x] Section A: Linear Regression
 
 -   [ ] Section B: Logistic Regression
 
@@ -96,37 +114,30 @@ solutions
 predictor.
 
 ```{r a-model1}
-# Fit a simple linear regression
-# Replace 'response' and 'predictor1' with your actual variable names
+# Simple linear regression: productivity predicted by hours_coding
+model1 <- lm(productivity ~ hours_coding, data = data)
 
-# model1 <- lm(response ~ predictor1, data = data)
-
-# View summary
-# summary(model1)
-
-
+summary(model1)
 ```
 
-\*\*Questions to answer:
+**Questions to answer:**
 
-1\. What is the adj R² value? What does it mean? -
-
--   **Your answer:**
+1.  What is the adj R² value? What does it mean?
+    -   **Your answer:** The Adjusted R² is 0.3642, meaning hours_coding alone explains about 36.4% of the variance in productivity. This is a moderate fit — hours_coding is a meaningful predictor on its own, but a lot of variance remains unexplained.
 
 2.  How do you interpret the slope coefficient?
-    -   **Your answer:**
+    -   **Your answer:** The slope for hours_coding is 0.6195. This means that for each additional hour spent coding, productivity score increases by about 0.62 points on average. The relationship is statistically significant (p < 2e-16).
 
 **Visualize the model:**
 
 ```{r a-model1-plot}
-# Scatterplot with regression line
-# ggplot(data, aes(x = predictor1, y = response)) +
-#   geom_point(alpha = 0.6) +
-#   geom_smooth(method = "lm", se = TRUE, color = "blue") +
-#   labs(title = "Model 1: Simple Linear Regression",
-#        x = "Predictor 1",
-#        y = "Response Variable") +
-#   theme_minimal()
+ggplot(data, aes(x = hours_coding, y = productivity)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(title = "Model 1: Simple Linear Regression",
+       x = "Hours Coding",
+       y = "Productivity Score") +
+  theme_minimal()
 ```
 
 ------------------------------------------------------------------------
