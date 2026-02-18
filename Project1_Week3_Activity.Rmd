@@ -76,19 +76,25 @@ str(data)
 
 \- What is your response variable?
 
-- Our response variable is `productivity`, a composite score built from z-scores of commits, bugs_reported, and task_success (from Week 2).
+-   Our response variable is `productivity`, a composite score built
+    from z-scores of commits, bugs_reported, and task_success (from Week
+    2).
 
 \- Is it continuous (use Section A) or binary (use Section B)?
 
-- It is continuous (numeric), so we use Section A (Linear Regression).
+-   It is continuous (numeric), so we use Section A (Linear Regression).
 
 \- What predictors are you considering?
 
-- `hours_coding`, `sleep_hours`, `cognitive_load`, `ai_usage_hours`, `coffee_intake_mg`, and `distractions`. These were identified in Week 2's EDA as having meaningful correlations with productivity.
+-   `hours_coding`, `sleep_hours`, `cognitive_load`, `ai_usage_hours`,
+    `coffee_intake_mg`, and `distractions`. These were identified in
+    Week 2's EDA as having meaningful correlations with productivity.
 
 \- Are all variables in the correct format (numeric, factor, etc.)?
 
-- Yes. All predictors are numeric, which is correct for linear regression. `task_success` was recoded to a factor but is only used inside the productivity score, not as a standalone predictor.
+-   Yes. All predictors are numeric, which is correct for linear
+    regression. `task_success` was recoded to a factor but is only used
+    inside the productivity score, not as a standalone predictor.
 
 **☐ Check here which section you'll use:**
 
@@ -123,10 +129,15 @@ summary(model1)
 **Questions to answer:**
 
 1.  What is the adj R² value? What does it mean?
-    -   **Your answer:** The Adjusted R² is 0.3642, meaning hours_coding alone explains about 36.4% of the variance in productivity. This is a moderate fit — hours_coding is a meaningful predictor on its own, but a lot of variance remains unexplained.
-
+    -   **Your answer:** The Adjusted R² is 0.3642, meaning hours_coding
+        alone explains about 36.4% of the variance in productivity. This
+        is a moderate fit — hours_coding is a meaningful predictor on
+        its own, but a lot of variance remains unexplained.
 2.  How do you interpret the slope coefficient?
-    -   **Your answer:** The slope for hours_coding is 0.6195. This means that for each additional hour spent coding, productivity score increases by about 0.62 points on average. The relationship is statistically significant (p < 2e-16).
+    -   **Your answer:** The slope for hours_coding is 0.6195. This
+        means that for each additional hour spent coding, productivity
+        score increases by about 0.62 points on average. The
+        relationship is statistically significant (p \< 2e-16).
 
 **Visualize the model:**
 
@@ -158,11 +169,19 @@ summary(model2)
 
 1.  What is the R² value? How does it compare to Model 1?
 
-    -   **Your answer:** The R² is 0.4516, up from 0.3655 in Model 1. Adding sleep_hours, cognitive_load, and ai_usage_hours explains about 8.6% more variance in productivity.
+    -   **Your answer:** The R² is 0.4516, up from 0.3655 in Model 1.
+        Adding sleep_hours, cognitive_load, and ai_usage_hours explains
+        about 8.6% more variance in productivity.
 
 2.  What is the Adjusted R² value? Why is this important?
 
-    -   **Your answer:** The Adjusted R² is 0.4472, up from 0.3642 in Model 1. Adjusted R² penalizes for extra predictors, so the fact that it still increased substantially confirms the added variables genuinely improved the model. Notably, hours_coding (p < 2e-16) and sleep_hours (p = 9.52e-06) are highly significant, ai_usage_hours is significant (p = 0.006), while cognitive_load is not significant (p = 0.19).
+    -   **Your answer:** The Adjusted R² is 0.4472, up from 0.3642 in
+        Model 1. Adjusted R² penalizes for extra predictors, so the fact
+        that it still increased substantially confirms the added
+        variables genuinely improved the model. Notably, hours_coding (p
+        \< 2e-16) and sleep_hours (p = 9.52e-06) are highly significant,
+        ai_usage_hours is significant (p = 0.006), while cognitive_load
+        is not significant (p = 0.19).
 
 ------------------------------------------------------------------------
 
@@ -236,24 +255,30 @@ ggplot(data, aes(x = predicted4, y = productivity)) +
 
 ```{r a-model-comparison}
 # Create comparison using broom::glance
-# library(broom)
-# bind_rows(
-#   glance(model1) %>% mutate(model = "Model 1"),
-#   glance(model2) %>% mutate(model = "Model 2"),
-#   glance(model3) %>% mutate(model = "Model 3")
-# ) %>%
-#   select(model, r.squared, adj.r.squared, AIC)
+ library(broom)
+ bind_rows(
+   glance(model1) %>% mutate(model = "Model 1"),
+   glance(model2) %>% mutate(model = "Model 2"),
+   glance(model3) %>% mutate(model = "Model 3"),
+   glance(model4) %>% mutate(model = "Model 4")
+ ) %>%
+   select(model, r.squared, adj.r.squared, AIC)
 ```
 
 **Model Selection Table:**
 
-| Criterion       | Best Model | Value |
-|-----------------|------------|-------|
-| Highest Adj. R² |            |       |
-| R²              |            |       |
-| AIC             |            |       |
+| Criterion       | Best Model | Value     |
+|-----------------|------------|-----------|
+| Highest Adj. R² | Model 4    | 0.4697183 |
+| R²              | Model 4    | 0.47609   |
+| AIC             | Model 4    | 1801.57   |
 
-**Your chosen model and justification:**
+**Your chosen model and justification: Model 4 is the preferred model
+because it has the highest R² and adjusted R², meaning it explains the
+greatest proportion of variability in the response variable.
+Additionally, it has the lowest AIC, indicating the best balance between
+model fit and complexity. Since it performs best across all comparison
+metrics, Model 4 is the strongest overall model.**
 
 ------------------------------------------------------------------------
 
@@ -266,24 +291,24 @@ ggplot(data, aes(x = predicted4, y = productivity)) +
 
 ```{r a-diagnostics-all}
 # Create all 4 diagnostic plots
-# par(mfrow = c(2, 2))
-# plot(model2)  # Replace with your chosen model
-# par(mfrow = c(1, 1))
+par(mfrow = c(2, 2))
+plot(model4)  # Replace with your chosen model
+par(mfrow = c(1, 1))
 ```
 
 ### Diagnostic Plot 1: Residuals vs Fitted
 
 ```{r a-resid-fitted}
-# plot(model2, which = 1)
+ plot(model4, which = 1)
 
 # Or using ggplot2
-# augment(model2) %>%
-#   ggplot(aes(x = .fitted, y = .resid)) +
-#   geom_point(alpha = 0.6) +
-#   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-#   geom_smooth(se = TRUE, color = "blue") +
-#   labs(title = "Residuals vs Fitted Values") +
-#   theme_minimal()
+ augment(model4) %>%
+   ggplot(aes(x = .fitted, y = .resid)) +
+   geom_point(alpha = 0.6) +
+   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+   geom_smooth(se = TRUE, color = "blue") +
+   labs(title = "Residuals vs Fitted Values") +
+   theme_minimal()
 ```
 
 **What to look for:**
@@ -293,17 +318,27 @@ ggplot(data, aes(x = predicted4, y = productivity)) +
 \- ✗ **Bad:** Curved pattern (non-linearity), funnel shape (unequal
 variance)
 
-**Your observations:**
+**Your observations: The residuals are generally centered around zero,
+but there is a slight curved pattern in the smooth line. This suggests a
+slight violation of the linearity assumption. However, there is no
+strong funnel shape, so the variance of the residuals appears relatively
+constant. Overall, the model assumptions are mostly reasonable, though
+there is some slight non-linearity.**
 
 ------------------------------------------------------------------------
 
 ### Diagnostic Plot 2: Normal Q-Q Plot
 
 ```{r a-qq-plot}
-# plot(model2, which = 2)
+ plot(model4, which = 2)
 ```
 
-**Your observations:**
+**Your observations: Most of the points closely follow the straight
+reference line, indicating that the residuals are about normally
+distributed. However, there are slight deviations in the lower tail,
+where a few points fall below the line. This suggests mild departures
+from normality, probably due to a few outliers. Overall, the normality
+assumption appears reasonably satisfied.**
 
 ------------------------------------------------------------------------
 
@@ -313,10 +348,37 @@ variance)
 
 ```{r a-fix-nonlinearity}
 # Add polynomial term
-# model_poly <- lm(response ~ predictor1 + I(predictor1^2), data = data)
-
+ model_poly <- lm(productivity ~ hours_coding + I(hours_coding^2) * ai_usage_hours + sleep_hours + cognitive_load + coffee_intake_mg + distractions, data = data)
 # Or log transformation
-# model_log <- lm(log(response) ~ predictor1, data = data)
+# model_log <- lm(log(productivity) ~ hours_coding * ai_usage_hours +
+#               sleep_hours + cognitive_load, data = data)
+
+# Create comparison using broom::glance
+ library(broom)
+ bind_rows(
+   glance(model_poly) %>% mutate(model = "Model poly"),
+   glance(model4) %>% mutate(model = "Model 4")
+ ) %>%
+   select(model, r.squared, adj.r.squared, AIC)
+# plot model_poly
+ plot(model_poly, which = 1)
+ augment(model_poly) %>%
+   ggplot(aes(x = .fitted, y = .resid)) +
+   geom_point(alpha = 0.6) +
+   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+   geom_smooth(se = TRUE, color = "blue") +
+   labs(title = "model_poly Residuals vs Fitted Values") +
+   theme_minimal()
+ 
+ #model 4
+  plot(model4, which = 1)
+ augment(model4) %>%
+   ggplot(aes(x = .fitted, y = .resid)) +
+   geom_point(alpha = 0.6) +
+   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+   geom_smooth(se = TRUE, color = "blue") +
+   labs(title = "model4 Residuals vs Fitted Values") +
+   theme_minimal()
 ```
 
 ### If you found unequal variance:
@@ -332,9 +394,12 @@ variance)
 
 ```{r a-final-model}
 # Your final model
-# final_model <- lm(...)
+# Model 4 was selected as the final model. While we tested adding a polynomial term for hours_coding to account for possible nonlinearity, this modification did not noticeably improve R², adjusted R², or AIC. The residuals of Model 4 show only minor deviations from linearity, so the simpler, fully linear Model 4 provides a good balance between accuracy and interpretability. 
+ final_model <- lm(productivity ~ hours_coding + sleep_hours +
+               cognitive_load + ai_usage_hours +
+               coffee_intake_mg + distractions, data = data)
 
-# summary(final_model)
+ summary(final_model)
 ```
 
 **Model equation:**
@@ -342,396 +407,30 @@ variance)
 $$\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ...$$
 
 **Your equation:**
+$$\hat{productivity} = -6.311+ 0.384(hours\_coding) + 0.390 (sleep\_hours) + 0.012(cognitive\_load) - 0.167 (ai\_usage\_hours) + 0.00454(coffee\_intake\_mg)- 0.081(distractions)$$
 
 **Performance:**
 
-\- R² =
+\- R² = 0.4761
 
-\- Adjusted R² =
+\- Adjusted R² = 0.4697
 
-\- RMSE =
+\- RMSE = 1.453
 
-\- AIC =
+\- AIC = 1801.57
 
 **Diagnostics checklist:**
 
-\- ☐ Linearity
+[KINDA ] Linearity
 
-\- ☐ Normality
+I would say the model is only violating the assumption of linearity
+slightly.
 
-\- ☐ Independence
+[YES] Normality
 
-\- ☐ Equal variance
+[YES] Independence
 
-------------------------------------------------------------------------
-
-# SECTION B: LOGISTIC REGRESSION
-
-**Use this section if your response variable is binary (0/1, Yes/No,
-Success/Failure).**
-
-**Skip this if you're using linear regression (Section A).**
-
-------------------------------------------------------------------------
-
-## B1: Preparing Binary Response Variable
-
-```{r b-prepare}
-# Make sure your response is binary (0/1 or factor)
-# If it's character (e.g., "Yes"/"No"), convert to factor or 0/1
-
-# Option 1: Keep as factor
-# data$response <- factor(data$response, levels = c("No", "Yes"))
-
-# Option 2: Convert to 0/1
-# data$response_binary <- ifelse(data$response == "Yes", 1, 0)
-
-# Check the distribution
-# table(data$response)
-# prop.table(table(data$response))
-```
-
-**What is your "success" category (the 1 or "Yes")?** - **Your answer:**
-
-**What proportion of observations are "success"?** - **Your answer:**
-
-------------------------------------------------------------------------
-
-## B2: Fitting Logistic Regression Models
-
-### Model 1: Simple Logistic Regression
-
-```{r b-model1}
-# Fit a simple logistic regression
-# model1 <- glm(response ~ predictor1, data = data, family = binomial)
-
-# View summary
-# summary(model1)
-
-# Tidy output
-# tidy(model1)
-# glance(model1)
-```
-
-**Questions to answer:**
-
-1.  What is the coefficient? (Remember: this is on the log-odds scale)
-    -   **Your answer:**
-2.  Calculate the odds ratio: exp(coefficient)
-    -   **Your answer:**
-
-**Interpret the odds ratio:**
-
-```{r b-odds-ratio-1}
-# Calculate odds ratio
-# exp(coef(model1))
-
-# With confidence intervals
-# exp(confint(model1))
-```
-
-**Interpretation:** For every one-unit increase in [predictor], the odds
-of [success] multiply by \_\_\_.
-
-------------------------------------------------------------------------
-
-**Visualize the model:**
-
-```{r b-model1-plot}
-# Create predicted probabilities
-# data_with_pred <- data %>%
-#   mutate(pred_prob = predict(model1, type = "response"))
-
-# Plot
-# ggplot(data, aes(x = predictor1, y = as.numeric(response) - 1)) +
-#   geom_point(alpha = 0.3) +
-#   geom_line(data = data_with_pred, aes(y = pred_prob), color = "blue", size = 1) +
-#   labs(title = "Logistic Regression: Model 1",
-#        x = "Predictor 1",
-#        y = "Probability of Success") +
-#   theme_minimal()
-```
-
-------------------------------------------------------------------------
-
-### Model 2: Multiple Logistic Regression
-
-```{r b-model2}
-# Fit multiple logistic regression
-# model2 <- glm(response ~ predictor1 + predictor2 + predictor3, 
-#               data = data, family = binomial)
-
-# View summary
-# summary(model2)
-
-# Tidy output
-# tidy(model2)
-# glance(model2)
-```
-
-**Calculate odds ratios for all predictors:**
-
-```{r b-odds-ratios-2}
-# Odds ratios
-# exp(coef(model2))
-
-# With confidence intervals
-# exp(confint(model2))
-
-# Or use tidy
-# tidy(model2, exponentiate = TRUE, conf.int = TRUE)
-```
-
-**Interpret key odds ratios:**
-
-1.  **Predictor 1:**
-
-2.  **Predictor 2:**
-
-------------------------------------------------------------------------
-
-### Model 3: Additional predictor model
-
-```{r b-model3}
-# Fit model with interaction
-# model3 <- glm(response ~ predictor1 + predictor2 + predictor3, 
-#               data = data, family = binomial)
-
-# View summary
-# summary(model3)
-
-# Odds ratios
-# tidy(model3, exponentiate = TRUE, conf.int = TRUE)
-```
-
-**Visualize interaction:**
-
-```{r b-interaction-plot}
-# Create test data
-# test_data <- expand_grid(
-#   predictor1 = seq(min(data$predictor1), max(data$predictor1), length.out = 100),
-#   predictor2 = quantile(data$predictor2, c(0.25, 0.5, 0.75)),
-#   predictor3 = mean(data$predictor3)
-# )
-
-# Get predictions
-# test_data$pred_prob <- predict(model3, newdata = test_data, type = "response")
-
-# Plot
-# ggplot(test_data, aes(x = predictor1, y = pred_prob, 
-#                       color = factor(predictor2))) +
-#   geom_line(size = 1) +
-#   labs(title = "Interaction Effect in Logistic Regression",
-#        y = "Predicted Probability",
-#        color = "Predictor 2") +
-#   theme_minimal()
-```
-
-------------------------------------------------------------------------
-
-## B3: Model Selection (Logistic)
-
-**Compare models using:**
-
-\- AIC (lower is better)
-
-```{r b-model-comparison}
-# Comparison table
-# library(broom)
-# bind_rows(
-#   glance(model1) %>% mutate(model = "Model 1"),
-#   glance(model2) %>% mutate(model = "Model 2"),
-#   glance(model3) %>% mutate(model = "Model 3")
-# ) %>%
-#   select(model, AIC)
-
-```
-
-**Model Selection Table:**
-
-| Model  | Model description | AIC Value |
-|--------|-------------------|-----------|
-| model1 |                   |           |
-|        |                   |           |
-|        |                   |           |
-
-**Your chosen model and justification:**
-
-------------------------------------------------------------------------
-
-## B4: Model Diagnostics (Logistic)
-
-**Key diagnostic checks for logistic regression:**
-
-1\. Linearity in the logit (for continuous predictors)
-
-2\. No multicollinearity
-
-3\. No influential observations
-
-4\. Model fit (goodness of fit tests)
-
-### Check 1: Linearity in the Logit
-
-**For continuous predictors:** The relationship between the predictor
-and log-odds should be linear.
-
-```{r b-linearity-logit}
-# Create logit of predicted probabilities
-# data_augment <- augment(model2, type.predict = "link")  # Gets log-odds
-
-# For each continuous predictor, plot predictor vs logit
-# ggplot(data_augment, aes(x = predictor1, y = .fitted)) +
-#   geom_point(alpha = 0.3) +
-#   geom_smooth(color = "blue") +
-#   labs(title = "Linearity in Logit Check",
-#        x = "Predictor 1",
-#        y = "Log-odds") +
-#   theme_minimal()
-
-# Should see roughly linear relationship
-```
-
-**Your observations:**
-
-------------------------------------------------------------------------
-
-### Check 2: Binned Residual Plot
-
-```{r b-binned-residuals}
-# Create binned residual plot
-# library(arm)  # For binnedplot
-# binnedplot(fitted(model2), residuals(model2, type = "response"))
-
-# Or manually:
-# data_with_resid <- data %>%
-#   mutate(
-#     fitted = fitted(model2),
-#     resid = residuals(model2, type = "response"),
-#     bin = ntile(fitted, 20)
-#   ) %>%
-#   group_by(bin) %>%
-#   summarise(
-#     mean_fitted = mean(fitted),
-#     mean_resid = mean(resid)
-#   )
-
-# ggplot(data_with_resid, aes(x = mean_fitted, y = mean_resid)) +
-#   geom_point() +
-#   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-#   labs(title = "Binned Residual Plot",
-#        x = "Average Fitted Probability",
-#        y = "Average Residual") +
-#   theme_minimal()
-```
-
-**What to look for:** - Points should scatter randomly around 0 - No
-systematic patterns
-
-**Your observations:**
-
-------------------------------------------------------------------------
-
-### Check 3: Calibration Plot
-
-**Check if predicted probabilities match observed frequencies:**
-
-```{r b-calibration}
-# Create calibration plot
-# data %>%
-#   mutate(
-#     pred_prob = predict(model2, type = "response"),
-#     bin = ntile(pred_prob, 10)
-#   ) %>%
-#   group_by(bin) %>%
-#   summarise(
-#     mean_pred = mean(pred_prob),
-#     observed = mean(as.numeric(response) - 1),  # Adjust if needed
-#     n = n()
-#   ) %>%
-#   ggplot(aes(x = mean_pred, y = observed)) +
-#   geom_point(aes(size = n)) +
-#   geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
-#   labs(title = "Calibration Plot",
-#        x = "Mean Predicted Probability",
-#        y = "Observed Proportion",
-#        size = "Count") +
-#   theme_minimal()
-```
-
-**What to look for:** - Points should fall near the diagonal line - Good
-calibration = predictions match reality
-
-**Your observations:**
-
-------------------------------------------------------------------------
-
-## B6: Addressing Issues (Logistic)
-
-### If you found non-linearity in logit:
-
-```{r b-fix-nonlinearity}
-# Add polynomial or spline terms
-# model_poly <- glm(response ~ predictor1 + I(predictor1^2), 
-#                   data = data, family = binomial)
-
-# Or categorize continuous predictors
-# data$predictor1_cat <- cut(data$predictor1, breaks = 3)
-# model_cat <- glm(response ~ predictor1_cat, data = data, family = binomial)
-```
-
-### If you have separation issues:
-
-```{r b-separation}
-# Check for complete/quasi-complete separation
-# Look for very large coefficients or standard errors
-
-# Use penalized regression if needed
-# library(brglm2)
-# model_penalized <- glm(response ~ predictors, data = data, 
-#                        family = binomial, method = "brglmFit")
-```
-
-------------------------------------------------------------------------
-
-## B7: Final Logistic Model
-
-```{r b-final-model}
-# Your final model
-# final_model <- glm(...)
-
-# summary(final_model)
-```
-
-**Model equation (log-odds):**
-
-$$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ...$$
-
-**Your equation:**
-
-**Odds ratios with interpretation:**
-
-```{r b-final-odds-ratios}
-# tidy(final_model, exponentiate = TRUE, conf.int = TRUE)
-```
-
-1.  **Predictor 1:** OR = ***, meaning***
-
-2.  **Predictor 2:** OR = ***, meaning***
-
-**Performance:**
-
-\- AIC =
-
-**Diagnostics checklist:**
-
-\- ☐ Linearity in logit
-
-\- ☐ No severe multicollinearity
-
-\- ☐ No overly influential points
-
-\- ☐ Good calibration
+[YES]Equal variance
 
 ------------------------------------------------------------------------
 
@@ -739,16 +438,25 @@ $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ...$$
 
 Before you leave, make sure you have:
 
--   [ ] Identified whether you're using linear or logistic regression
--   [ ] Fitted at least 2-3 different models
--   [ ] Compared models using appropriate criteria
--   [ ] Selected your best model with clear justification
--   [ ] Created all relevant diagnostic plots
--   [ ] Checked and interpreted diagnostic results
--   [ ] Calculated performance metrics (R²/RMSE )
--   [ ] Addressed any major issues (or documented why you can't)
--   [ ] Written out your final model equation
--   [ ] Interpreted at least 2 key coefficients/odds ratios
+[YES] Identified whether you're using linear or logistic regression
+
+[YES] Fitted at least 2-3 different models
+
+[YES] Compared models using appropriate criteria
+
+[YES] Selected your best model with clear justification
+
+[YES] Created all relevant diagnostic plots
+
+[YES] Checked and interpreted diagnostic results
+
+[YES] Calculated performance metrics (R²/RMSE )
+
+[YES] Addressed any major issues (or documented why you can't)
+
+[YES] Written out your final model equation
+
+[YES] Interpreted at least 2 key coefficients/odds ratios
 
 ------------------------------------------------------------------------
 
@@ -808,16 +516,16 @@ off
 
 ## Group Information
 
-| Name | BUID | Present/Absent |
-|------|------|----------------|
-|      |      |                |
-|      |      |                |
-|      |      |                |
-|      |      |                |
+| Name         | BUID      | Present/Absent |
+|--------------|-----------|----------------|
+| Hibak Hussen | U15515562 | Present        |
+| Ian Sabia    | U33871576 | Present        |
+| Muze Ren     | U21890514 | Present        |
+| Yunhao Zhou  | U18926707 | Present        |
 
 **Which section did you use?**
 
--   [ ] Section A: Linear Regression
+-   [x] Section A: Linear Regression
 
 -   [ ] Section B: Logistic Regression
 
