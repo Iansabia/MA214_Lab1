@@ -5,6 +5,7 @@ author: "Section C4  |  Group 7"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
+    latex_engine: xelatex
     toc: true
   html_document:
     toc: true
@@ -233,13 +234,21 @@ summary(model4)
 vif(model4)
 ```
 
+**VIF interpretation:** Most VIF values are below 5, suggesting acceptable
+levels of multicollinearity. However, `hours_coding` (5.70) slightly
+exceeds the common threshold of 5, and `coffee_intake_mg` (4.90) is
+close to it. This indicates moderate correlation between these predictors
+and the others, but since no VIF exceeds 10 (the more conservative
+threshold), multicollinearity is not severe enough to warrant removing
+predictors from the model.
+
 **Visualize the model:**
 
 ```{r model-4-visual}
 # Compare actual vs predicted values for the full model
-data$predicted4 <- predict(model4)
+model4_aug <- augment(model4)
 
-ggplot(data, aes(x = predicted4, y = productivity)) +
+ggplot(model4_aug, aes(x = .fitted, y = productivity)) +
   geom_point(alpha = 0.5) +
   geom_abline(slope = 1, intercept = 0,
               color = "red", linetype = "dashed") +
@@ -348,7 +357,7 @@ assumption appears reasonably satisfied.**
 
 ```{r a-fix-nonlinearity}
 # Add polynomial term
- model_poly <- lm(productivity ~ hours_coding + I(hours_coding^2) * ai_usage_hours + sleep_hours + cognitive_load + coffee_intake_mg + distractions, data = data)
+ model_poly <- lm(productivity ~ hours_coding + I(hours_coding^2) + sleep_hours + cognitive_load + ai_usage_hours + coffee_intake_mg + distractions, data = data)
 # Or log transformation
 # model_log <- lm(log(productivity) ~ hours_coding * ai_usage_hours +
 #               sleep_hours + cognitive_load, data = data)
@@ -407,7 +416,9 @@ assumption appears reasonably satisfied.**
 $$\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ...$$
 
 **Your equation:**
-$$\hat{productivity} = -6.311+ 0.384(hours\_coding) + 0.390 (sleep\_hours) + 0.012(cognitive\_load) - 0.167 (ai\_usage\_hours) + 0.00454(coffee\_intake\_mg)- 0.081(distractions)$$
+$$\hat{productivity} = -6.311 + 0.384(hours\_coding) + 0.390(sleep\_hours)$$
+$$+ 0.012(cognitive\_load) - 0.167(ai\_usage\_hours)$$
+$$+ 0.00454(coffee\_intake\_mg) - 0.081(distractions)$$
 
 **Performance:**
 
@@ -421,7 +432,7 @@ $$\hat{productivity} = -6.311+ 0.384(hours\_coding) + 0.390 (sleep\_hours) + 0.0
 
 **Diagnostics checklist:**
 
-[KINDA ] Linearity
+[KINDA] Linearity
 
 I would say the model is only violating the assumption of linearity
 slightly.
@@ -430,7 +441,7 @@ slightly.
 
 [YES] Independence
 
-[YES]Equal variance
+[YES] Equal variance
 
 ------------------------------------------------------------------------
 
@@ -507,8 +518,6 @@ off
 4\. Any additional R scripts if needed
 
 **One submission per group.**
-
-\+
 
 **Individual submission.**
 
