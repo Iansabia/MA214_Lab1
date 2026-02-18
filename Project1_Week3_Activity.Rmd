@@ -147,23 +147,22 @@ ggplot(data, aes(x = hours_coding, y = productivity)) +
 **Objective:** Add more predictors to improve the model.
 
 ```{r a-model2}
-# Fit a multiple regression model with main effects only
-# model2 <- lm(response ~ predictor1 + predictor2 + predictor3, data = data)
+# Multiple regression with top 4 predictors from Week 2 EDA
+model2 <- lm(productivity ~ hours_coding + sleep_hours +
+               cognitive_load + ai_usage_hours, data = data)
 
-# View summary
-# summary(model2)
-
+summary(model2)
 ```
 
 **Questions to answer:**
 
 1.  What is the R² value? How does it compare to Model 1?
 
-    -   **Your answer:**
+    -   **Your answer:** The R² is 0.4516, up from 0.3655 in Model 1. Adding sleep_hours, cognitive_load, and ai_usage_hours explains about 8.6% more variance in productivity.
 
 2.  What is the Adjusted R² value? Why is this important?
 
-    -   **Your answer:**
+    -   **Your answer:** The Adjusted R² is 0.4472, up from 0.3642 in Model 1. Adjusted R² penalizes for extra predictors, so the fact that it still increased substantially confirms the added variables genuinely improved the model. Notably, hours_coding (p < 2e-16) and sleep_hours (p = 9.52e-06) are highly significant, ai_usage_hours is significant (p = 0.006), while cognitive_load is not significant (p = 0.19).
 
 ------------------------------------------------------------------------
 
