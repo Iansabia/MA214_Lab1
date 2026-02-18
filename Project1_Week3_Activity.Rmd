@@ -203,25 +203,31 @@ data %>%
 **Objective:** Test if additional model can be used
 
 ```{r a-model4}
-# Fit an additional model 
-# model4 <- lm(response ~ predictor1 * predictor2 + predictor3 + ... , data = data)
+# Full model with all 6 predictors (including coffee and distractions)
+model4 <- lm(productivity ~ hours_coding + sleep_hours +
+               cognitive_load + ai_usage_hours +
+               coffee_intake_mg + distractions, data = data)
 
-# View summary
-# summary(model4)
+summary(model4)
+
+# Check multicollinearity with VIF
+vif(model4)
 ```
 
 **Visualize the model:**
 
 ```{r model-4-visual}
-# Create interaction plot
-# data %>%
-#   mutate(predictor2_group = cut(predictor2, breaks = 3, 
-#                                  labels = c("Low", "Medium", "High"))) %>%
-#   ggplot(aes(x = predictor1, y = response, color = predictor2_group)) +
-#   geom_point(alpha = 0.5) +
-#   geom_smooth(method = "lm", se = TRUE) +
-#   labs(title = "Interaction Effect") +
-#   theme_minimal()
+# Compare actual vs predicted values for the full model
+data$predicted4 <- predict(model4)
+
+ggplot(data, aes(x = predicted4, y = productivity)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0,
+              color = "red", linetype = "dashed") +
+  labs(title = "Model 4: Actual vs Predicted Productivity",
+       x = "Predicted Productivity",
+       y = "Actual Productivity") +
+  theme_minimal()
 ```
 
 ------------------------------------------------------------------------
